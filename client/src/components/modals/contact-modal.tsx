@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,11 +17,30 @@ interface ContactModalProps {
 
 export default function ContactModal({ isOpen, onClose, contact }: ContactModalProps) {
   const [formData, setFormData] = useState({
-    name: contact?.name || "",
-    phone: contact?.phone || "",
-    role: contact?.role || "",
-    isActive: contact?.isActive ?? true,
+    name: "",
+    phone: "",
+    role: "",
+    isActive: true,
   });
+
+  // Update form data when contact prop changes
+  useEffect(() => {
+    if (contact) {
+      setFormData({
+        name: contact.name || "",
+        phone: contact.phone || "",
+        role: contact.role || "",
+        isActive: contact.isActive ?? true,
+      });
+    } else {
+      setFormData({
+        name: "",
+        phone: "",
+        role: "",
+        isActive: true,
+      });
+    }
+  }, [contact]);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -44,7 +63,7 @@ export default function ContactModal({ isOpen, onClose, contact }: ContactModalP
           : "Contato cadastrado com sucesso!",
       });
       onClose();
-      setFormData({ name: "", phone: "", role: "", isActive: true });
+      // Form will be reset by useEffect when contact prop changes
     },
     onError: () => {
       toast({
