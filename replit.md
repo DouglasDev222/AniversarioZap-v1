@@ -38,9 +38,10 @@ Preferred communication style: Simple, everyday language.
 - **CORS**: Configured for cross-origin requests
 
 ### External Service Integrations
-- **WhatsApp Integration**: Puppeteer-based WhatsApp Web automation with dual-mode support
+- **WhatsApp Integration**: WhatsApp-Web.js library with dual-mode support
   - Simulation mode: For development and testing (default in Replit)
   - Real mode: For production with actual WhatsApp Web connection (requires local environment)
+  - Uses createRequire for ES module compatibility with CommonJS library
 - **Scheduling**: Node-cron for automated birthday notifications
 - **Email Support**: Prepared for email notifications (infrastructure ready)
 
@@ -74,9 +75,10 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### 2025-08-11: WhatsApp Integration Setup
-- **WhatsApp Real Mode Implementation**: Added support for real WhatsApp Web connection using Puppeteer
+- **WhatsApp-Web.js Migration**: Successfully migrated from Puppeteer to whatsapp-web.js library
+- **ES Module Compatibility**: Implemented createRequire solution for CommonJS library integration
 - **Dual Mode System**: Implemented switching between simulation and real modes
-- **Environment Limitations**: Documented Replit environment constraints for Puppeteer
+- **Environment Limitations**: Documented Replit environment constraints for browser automation
 - **Message Templates**: Created comprehensive birthday and reminder templates with variables:
   - Variables: [NOME], [CARGO], [IDADE], [DATA_NASCIMENTO]
   - Reminder template for day-before notifications
@@ -88,3 +90,4 @@ Preferred communication style: Simple, everyday language.
 - WhatsApp real mode requires local environment or Docker with proper system dependencies
 - In Replit: Use simulation mode for development and testing
 - For production: Deploy to environment with libgbm1, libnss3, libxss1, libgtk-3-0, libasound2
+- WhatsApp-Web.js provides better session management and stability than raw Puppeteer

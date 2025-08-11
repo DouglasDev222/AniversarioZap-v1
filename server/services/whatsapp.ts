@@ -1,14 +1,13 @@
-// Use dynamic import for whatsapp-web.js CommonJS module
-let wwebjs: any;
-let qrcode: any;
+// Use createRequire to import CommonJS modules in ES modules environment
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 
-async function initializeModules() {
-  if (!wwebjs) {
-    wwebjs = await import('whatsapp-web.js');
-    qrcode = await import('qrcode-terminal');
-  }
-  return { Client: wwebjs.Client, LocalAuth: wwebjs.LocalAuth, qrcode };
-}
+const createWhatsAppClient = async () => {
+  // Since whatsapp-web.js is CommonJS, we use require with createRequire
+  const { Client, LocalAuth } = require('whatsapp-web.js');
+  const qrcode = require('qrcode-terminal');
+  return { Client, LocalAuth, qrcode };
+};
 
 export class WhatsAppService {
   private client: any | null = null;
@@ -30,15 +29,18 @@ export class WhatsAppService {
     console.log('🔄 Iniciando conexão com WhatsApp Web usando whatsapp-web.js...');
 
     try {
-      // Load modules dynamically
-      this.modules = await initializeModules();
+      // Load modules using require (CommonJS)
+      this.modules = await createWhatsAppClient();
       const { Client, LocalAuth } = this.modules;
+
+      // Create authentication strategy
+      const authStrategy = new LocalAuth({
+        dataPath: './whatsapp-sessions'
+      });
 
       // Initialize WhatsApp Web client with local authentication
       this.client = new Client({
-        authStrategy: new LocalAuth({
-          dataPath: './whatsapp-sessions'
-        }),
+        authStrategy: authStrategy,
         puppeteer: {
           headless: true,
           args: [
