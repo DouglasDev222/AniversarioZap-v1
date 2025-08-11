@@ -20,14 +20,27 @@ export class WhatsAppService {
     console.log('Iniciando conexão com WhatsApp Web...');
 
     try {
+      // Use the bundled Chromium from Puppeteer but with additional flags for Replit environment
       this.browser = await puppeteer.launch({
-        headless: false, // Mostrar o navegador para debug
+        headless: true,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-web-security',
-          '--disable-features=VizDisplayCompositor'
+          '--disable-features=VizDisplayCompositor',
+          '--disable-blink-features=AutomationControlled',
+          '--disable-background-networking',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-extensions',
+          '--no-first-run',
+          '--no-default-browser-check',
+          '--disable-gpu',
+          '--disable-software-rasterizer',
+          '--single-process', // Important for limited memory environments
+          '--no-zygote'       // Important for containerized environments
         ]
       });
 
@@ -67,7 +80,11 @@ export class WhatsAppService {
       
     } catch (error) {
       console.error('Falha ao inicializar WhatsApp:', error);
-      console.log('Retornando ao modo simulação devido a erro');
+      console.log('ATENÇÃO: Para usar o WhatsApp real, você precisa:');
+      console.log('1. Rodar o projeto em um ambiente local (não no Replit)');
+      console.log('2. Instalar dependências do sistema: apt-get install -y libgbm1 libnss3 libxss1 libgtk-3-0 libasound2');
+      console.log('3. Ou usar Docker com uma imagem que suporte Puppeteer');
+      console.log('Retornando ao modo simulação devido a limitações do ambiente Replit');
       this.connectionStatus = 'disconnected';
       this.simulateMode = true;
       this.isConnected = true;
@@ -206,6 +223,24 @@ export class WhatsAppService {
     }
     
     console.log('Modo simulação ativado');
+  }
+
+  async enableRealMode(): Promise<void> {
+    console.log('Desabilitando modo simulação - iniciando conexão real com WhatsApp Web');
+    
+    // Close any existing browser connection
+    if (this.browser) {
+      await this.browser.close();
+      this.browser = null;
+      this.page = null;
+    }
+    
+    this.simulateMode = false;
+    this.isConnected = false;
+    this.connectionStatus = 'disconnected';
+    this.qrCode = null;
+    
+    console.log('Modo real ativado - use o endpoint /api/whatsapp/connect para conectar');
   }
 }
 

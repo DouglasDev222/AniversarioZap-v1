@@ -210,6 +210,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/whatsapp/enable-real", async (_req, res) => {
+    try {
+      await whatsappService.enableRealMode();
+      const status = whatsappService.getConnectionStatus();
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to enable real mode" });
+    }
+  });
+
   app.post("/api/whatsapp/test-connection", async (_req, res) => {
     try {
       const isConnected = await whatsappService.testConnection();

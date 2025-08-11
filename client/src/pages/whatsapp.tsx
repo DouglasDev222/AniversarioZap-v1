@@ -45,6 +45,14 @@ export default function WhatsAppPage() {
     },
   });
 
+  const enableRealMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/whatsapp/enable-real'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/whatsapp/status'] });
+      setAutoRefresh(false);
+    },
+  });
+
   useEffect(() => {
     if (status?.status === 'connected') {
       setAutoRefresh(false);
@@ -179,6 +187,22 @@ export default function WhatsAppPage() {
                     Usar Modo Simulação
                   </Button>
                 </>
+              )}
+
+              {(status?.status === 'connected' && status?.simulateMode) && (
+                <Button 
+                  onClick={() => enableRealMutation.mutate()}
+                  disabled={enableRealMutation.isPending}
+                  variant="default"
+                  className="flex items-center gap-2"
+                >
+                  {enableRealMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Smartphone className="h-4 w-4" />
+                  )}
+                  Conectar WhatsApp Real
+                </Button>
               )}
 
               {(status?.status === 'connected' && !status.simulateMode) && (

@@ -38,7 +38,9 @@ Preferred communication style: Simple, everyday language.
 - **CORS**: Configured for cross-origin requests
 
 ### External Service Integrations
-- **WhatsApp Integration**: Puppeteer-based WhatsApp Web automation
+- **WhatsApp Integration**: Puppeteer-based WhatsApp Web automation with dual-mode support
+  - Simulation mode: For development and testing (default in Replit)
+  - Real mode: For production with actual WhatsApp Web connection (requires local environment)
 - **Scheduling**: Node-cron for automated birthday notifications
 - **Email Support**: Prepared for email notifications (infrastructure ready)
 
@@ -68,3 +70,21 @@ Preferred communication style: Simple, everyday language.
 - **Problem**: Runtime errors from database operations and data validation
 - **Solution**: Compile-time type checking with runtime validation
 - **Benefits**: Reduced bugs, better developer experience, data integrity
+
+## Recent Changes
+
+### 2025-08-11: WhatsApp Integration Setup
+- **WhatsApp Real Mode Implementation**: Added support for real WhatsApp Web connection using Puppeteer
+- **Dual Mode System**: Implemented switching between simulation and real modes
+- **Environment Limitations**: Documented Replit environment constraints for Puppeteer
+- **Message Templates**: Created comprehensive birthday and reminder templates with variables:
+  - Variables: [NOME], [CARGO], [IDADE], [DATA_NASCIMENTO]
+  - Reminder template for day-before notifications
+  - Birthday template for same-day celebrations
+- **Test Data**: Populated database with 10 sample employees for testing
+- **UI Enhancement**: Added WhatsApp connection interface with QR code display capability
+
+### Production Notes
+- WhatsApp real mode requires local environment or Docker with proper system dependencies
+- In Replit: Use simulation mode for development and testing
+- For production: Deploy to environment with libgbm1, libnss3, libxss1, libgtk-3-0, libasound2
