@@ -1,0 +1,170 @@
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import type { Employee } from "@shared/schema";
+
+interface EmployeeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  employee?: Employee;
+}
+
+export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeModalProps) {
+  const [formData, setFormData] = useState({
+    name: employee?.name || "",
+    birthDate: employee?.birthDate || "",
+    position: employee?.position || "",
+    email: employee?.email || "",
+  });
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const isEditing = !!employee;
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => {
+      if (isEditing) {
+        return api.employees.update(employee.id, data);
+      } else {
+        return api.employees.create(data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      toast({
+        title: "Sucesso",
+        description: isEditing 
+          ? "Colaborador atualizado com sucesso!"
+          : "Colaborador cadastrado com sucesso!",
+      });
+      onClose();
+      setFormData({ name: "", birthDate: "", position: "", email: "" });
+    },
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Falha ao salvar colaborador. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim() || !formData.birthDate || !formData.position.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    mutation.mutate(formData);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {isEditing ? "Editar Colaborador" : "Adicionar Novo Colaborador"}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome Completo *</Label>
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Ex: Maria Silva"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="birthDate">Data de Nascimento *</Label>
+            <Input
+              id="birthDate"
+              name="birthDate"
+              type="date"
+              value={formData.birthDate}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="position">Cargo *</Label>
+            <Input
+              id="position"
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
+              placeholder="Ex: Analista de Marketing"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="email@empresa.com"
+            />
+          </div>
+          
+          <div className="flex space-x-3 pt-4">
+            <Button 
+              type="submit" 
+              className="flex-1"
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending ? (
+                <>
+                  <i className="fas fa-spinner fa-spin mr-2"></i>
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-save mr-2"></i>
+                  Salvar
+                </>
+              )}
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex-1"
+              onClick={onClose}
+            >
+              <i className="fas fa-times mr-2"></i>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
