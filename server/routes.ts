@@ -1,11 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, storagePromise } from "./storage";
 import { whatsappService } from "./services/whatsapp";
 import { schedulerService } from "./services/scheduler";
 import { insertEmployeeSchema, insertContactSchema, insertSettingsSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize storage first
+  await storagePromise;
+  console.log('Storage initialized successfully');
   
   // Initialize services
   try {

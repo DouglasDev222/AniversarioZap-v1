@@ -6,9 +6,16 @@ import {
   type Message,
   type InsertMessage,
   type Settings,
-  type InsertSettings
+  type InsertSettings,
+  employees,
+  contacts,
+  messages,
+  settings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Employee operations
@@ -185,4 +192,161 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// PostgreSQL Database Storage
+export class DatabaseStorage implements IStorage {
+  private db;
+
+  constructor() {
+    const sql = neon(process.env.DATABASE_URL!);
+    this.db = drizzle(sql);
+  }
+
+  // Employee operations
+  async getEmployees(): Promise<Employee[]> {
+    return await this.db.select().from(employees);
+  }
+
+  async getEmployee(id: string): Promise<Employee | undefined> {
+    const result = await this.db.select().from(employees).where(eq(employees.id, id));
+    return result[0];
+  }
+
+  async createEmployee(employee: InsertEmployee): Promise<Employee> {
+    const id = randomUUID();
+    const newEmployee = { ...employee, id };
+    const result = await this.db.insert(employees).values(newEmployee).returning();
+    return result[0];
+  }
+
+  async updateEmployee(id: string, employee: Partial<InsertEmployee>): Promise<Employee | undefined> {
+    const result = await this.db.update(employees).set(employee).where(eq(employees.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteEmployee(id: string): Promise<boolean> {
+    const result = await this.db.delete(employees).where(eq(employees.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Contact operations
+  async getContacts(): Promise<Contact[]> {
+    return await this.db.select().from(contacts);
+  }
+
+  async getContact(id: string): Promise<Contact | undefined> {
+    const result = await this.db.select().from(contacts).where(eq(contacts.id, id));
+    return result[0];
+  }
+
+  async createContact(contact: InsertContact): Promise<Contact> {
+    const id = randomUUID();
+    const newContact = { ...contact, id };
+    const result = await this.db.insert(contacts).values(newContact).returning();
+    return result[0];
+  }
+
+  async updateContact(id: string, contact: Partial<InsertContact>): Promise<Contact | undefined> {
+    const result = await this.db.update(contacts).set(contact).where(eq(contacts.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteContact(id: string): Promise<boolean> {
+    const result = await this.db.delete(contacts).where(eq(contacts.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Message operations
+  async getMessages(): Promise<Message[]> {
+    return await this.db.select().from(messages);
+  }
+
+  async getMessage(id: string): Promise<Message | undefined> {
+    const result = await this.db.select().from(messages).where(eq(messages.id, id));
+    return result[0];
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const id = randomUUID();
+    const newMessage = { 
+      ...message, 
+      id,
+      scheduledFor: message.scheduledFor || null,
+      sentAt: message.sentAt || null,
+      errorMessage: message.errorMessage || null
+    };
+    const result = await this.db.insert(messages).values(newMessage).returning();
+    return result[0];
+  }
+
+  async updateMessage(id: string, message: Partial<InsertMessage>): Promise<Message | undefined> {
+    const result = await this.db.update(messages).set(message).where(eq(messages.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteMessage(id: string): Promise<boolean> {
+    const result = await this.db.delete(messages).where(eq(messages.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Settings operations
+  async getSettings(): Promise<Settings | undefined> {
+    const result = await this.db.select().from(settings).limit(1);
+    return result[0];
+  }
+
+  async createOrUpdateSettings(insertSettings: InsertSettings): Promise<Settings> {
+    const existing = await this.getSettings();
+    
+    if (existing) {
+      const result = await this.db.update(settings)
+        .set({
+          ...insertSettings,
+          reminderTime: insertSettings.reminderTime || "08:00",
+          birthdayTime: insertSettings.birthdayTime || "09:00",
+          weekendsEnabled: insertSettings.weekendsEnabled ?? true,
+          retryAttempts: insertSettings.retryAttempts || 2,
+          retryInterval: insertSettings.retryInterval || 5
+        })
+        .where(eq(settings.id, existing.id))
+        .returning();
+      return result[0];
+    } else {
+      const id = randomUUID();
+      const newSettings = { 
+        ...insertSettings, 
+        id,
+        reminderTime: insertSettings.reminderTime || "08:00",
+        birthdayTime: insertSettings.birthdayTime || "09:00",
+        weekendsEnabled: insertSettings.weekendsEnabled ?? true,
+        retryAttempts: insertSettings.retryAttempts || 2,
+        retryInterval: insertSettings.retryInterval || 5
+      };
+      const result = await this.db.insert(settings).values(newSettings).returning();
+      return result[0];
+    }
+  }
+}
+
+// Initialize storage with fallback
+async function initializeStorage(): Promise<IStorage> {
+  try {
+    const dbStorage = new DatabaseStorage();
+    // Test the connection
+    await dbStorage.getSettings();
+    console.log('✅ Conectado ao PostgreSQL (Supabase)');
+    return dbStorage;
+  } catch (error: any) {
+    console.log('⚠️ Falha na conexão PostgreSQL, usando armazenamento em memória');
+    console.log('Erro:', error.message || error);
+    return new MemStorage();
+  }
+}
+
+// Initialize storage asynchronously
+let storage: IStorage;
+const storagePromise = initializeStorage().then((s) => {
+  storage = s;
+  return s;
+});
+
+export { storage, storagePromise };
