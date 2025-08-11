@@ -10,6 +10,7 @@ import Employees from "@/pages/employees";
 import Contacts from "@/pages/contacts";
 import Messages from "@/pages/messages";
 import Settings from "@/pages/settings";
+import WhatsApp from "@/pages/whatsapp";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/employees" component={Employees} />
       <Route path="/contacts" component={Contacts} />
       <Route path="/messages" component={Messages} />
+      <Route path="/whatsapp" component={WhatsApp} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>

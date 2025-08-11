@@ -168,7 +168,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // WhatsApp test routes
+  // WhatsApp connection routes
+  app.get("/api/whatsapp/status", async (_req, res) => {
+    try {
+      const status = whatsappService.getConnectionStatus();
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get WhatsApp status" });
+    }
+  });
+
+  app.post("/api/whatsapp/connect", async (_req, res) => {
+    try {
+      await whatsappService.initialize();
+      const status = whatsappService.getConnectionStatus();
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to initialize WhatsApp connection" });
+    }
+  });
+
+  app.post("/api/whatsapp/refresh-qr", async (_req, res) => {
+    try {
+      const qrCode = await whatsappService.refreshQRCode();
+      res.json({ qrCode });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to refresh QR code" });
+    }
+  });
+
+  app.post("/api/whatsapp/enable-simulation", async (_req, res) => {
+    try {
+      await whatsappService.enableSimulationMode();
+      const status = whatsappService.getConnectionStatus();
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to enable simulation mode" });
+    }
+  });
+
   app.post("/api/whatsapp/test-connection", async (_req, res) => {
     try {
       const isConnected = await whatsappService.testConnection();

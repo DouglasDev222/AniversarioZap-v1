@@ -22,6 +22,11 @@ const navigation = [
     icon: "fas fa-whatsapp",
   },
   {
+    name: "WhatsApp",
+    href: "/whatsapp",
+    icon: "fas fa-qrcode",
+  },
+  {
     name: "Configurações",
     href: "/settings",
     icon: "fas fa-cog",

@@ -4,62 +4,74 @@ export class WhatsAppService {
   private browser: Browser | null = null;
   private page: Page | null = null;
   private isConnected = false;
-  private simulateMode = true; // Modo simulação para desenvolvimento
+  private simulateMode = false; // Desabilitado para permitir conexão real
+  private qrCode: string | null = null;
+  private connectionStatus: 'disconnected' | 'waiting_qr' | 'connecting' | 'connected' = 'disconnected';
 
   async initialize(): Promise<void> {
     if (this.simulateMode) {
       console.log('WhatsApp Service initialized in simulation mode');
       this.isConnected = true;
+      this.connectionStatus = 'connected';
       return;
     }
 
+    this.connectionStatus = 'connecting';
+    console.log('Iniciando conexão com WhatsApp Web...');
+
     try {
       this.browser = await puppeteer.launch({
-        headless: true,
+        headless: false, // Mostrar o navegador para debug
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu',
-          '--disable-extensions',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-          '--disable-features=TranslateUI',
           '--disable-web-security',
           '--disable-features=VizDisplayCompositor'
         ]
       });
 
       this.page = await this.browser.newPage();
-      await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+      await this.page.setViewport({ width: 1200, height: 800 });
+      await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
       
-      await this.page.goto('https://web.whatsapp.com');
+      console.log('Navegando para WhatsApp Web...');
+      await this.page.goto('https://web.whatsapp.com', { waitUntil: 'networkidle2' });
       
       // Wait for QR code or main interface
-      await this.page.waitForSelector('[data-testid="qr-code"], [data-testid="search"]', { timeout: 60000 });
+      console.log('Aguardando QR code ou interface principal...');
+      await this.page.waitForSelector('[data-testid="qr-code"], [data-testid="search"], [data-testid="intro-md-beta-logo-dark"], [data-testid="intro-md-beta-logo-light"]', { timeout: 30000 });
       
       // Check if already logged in
       const searchBox = await this.page.$('[data-testid="search"]');
       if (searchBox) {
         this.isConnected = true;
-        console.log('WhatsApp Web connected successfully');
-      } else {
-        console.log('Please scan QR code to connect WhatsApp Web');
-        // Wait for login completion
-        await this.page.waitForSelector('[data-testid="search"]', { timeout: 300000 });
-        this.isConnected = true;
-        console.log('WhatsApp Web logged in successfully');
+        this.connectionStatus = 'connected';
+        console.log('WhatsApp Web já está conectado!');
+        return;
       }
+
+      // Look for QR code
+      this.connectionStatus = 'waiting_qr';
+      console.log('Aguardando scan do QR code...');
+      
+      // Try to capture QR code
+      await this.captureQRCode();
+      
+      // Wait for login completion
+      await this.page.waitForSelector('[data-testid="search"]', { timeout: 120000 });
+      this.isConnected = true;
+      this.connectionStatus = 'connected';
+      this.qrCode = null;
+      console.log('WhatsApp Web conectado com sucesso!');
+      
     } catch (error) {
-      console.error('Failed to initialize WhatsApp:', error);
-      console.log('Falling back to simulation mode');
+      console.error('Falha ao inicializar WhatsApp:', error);
+      console.log('Retornando ao modo simulação devido a erro');
+      this.connectionStatus = 'disconnected';
       this.simulateMode = true;
       this.isConnected = true;
+      this.connectionStatus = 'connected';
     }
   }
 
@@ -135,8 +147,65 @@ export class WhatsAppService {
     }
   }
 
-  getConnectionStatus(): boolean {
-    return this.isConnected;
+  async captureQRCode(): Promise<void> {
+    if (!this.page) return;
+
+    try {
+      // Wait for QR code to appear
+      await this.page.waitForSelector('[data-testid="qr-code"]', { timeout: 10000 });
+      
+      // Get QR code element
+      const qrElement = await this.page.$('[data-testid="qr-code"] canvas');
+      if (qrElement) {
+        // Take screenshot of QR code
+        const qrBuffer = await qrElement.screenshot({ encoding: 'base64' });
+        this.qrCode = `data:image/png;base64,${qrBuffer}`;
+        console.log('QR Code capturado com sucesso');
+      }
+    } catch (error) {
+      console.log('Não foi possível capturar o QR code:', error);
+    }
+  }
+
+  getConnectionStatus(): { 
+    isConnected: boolean; 
+    status: string; 
+    qrCode: string | null; 
+    simulateMode: boolean;
+  } {
+    return {
+      isConnected: this.isConnected,
+      status: this.connectionStatus,
+      qrCode: this.qrCode,
+      simulateMode: this.simulateMode
+    };
+  }
+
+  async refreshQRCode(): Promise<string | null> {
+    if (!this.page || this.connectionStatus !== 'waiting_qr') return null;
+    
+    try {
+      await this.captureQRCode();
+      return this.qrCode;
+    } catch (error) {
+      console.error('Erro ao atualizar QR code:', error);
+      return null;
+    }
+  }
+
+  async enableSimulationMode(): Promise<void> {
+    this.simulateMode = true;
+    this.isConnected = true;
+    this.connectionStatus = 'connected';
+    this.qrCode = null;
+    
+    if (this.browser) {
+      await this.browser.close();
+      this.browser = null;
+      this.page = null;
+    }
+    
+    console.log('Modo simulação ativado');
   }
 }
 
