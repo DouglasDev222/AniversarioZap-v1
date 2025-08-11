@@ -75,7 +75,11 @@ export class MemStorage implements IStorage {
 
   async createEmployee(insertEmployee: InsertEmployee): Promise<Employee> {
     const id = randomUUID();
-    const employee: Employee = { ...insertEmployee, id };
+    const employee: Employee = { 
+      ...insertEmployee, 
+      id,
+      email: insertEmployee.email || null 
+    };
     this.employees.set(id, employee);
     return employee;
   }
@@ -104,7 +108,11 @@ export class MemStorage implements IStorage {
 
   async createContact(insertContact: InsertContact): Promise<Contact> {
     const id = randomUUID();
-    const contact: Contact = { ...insertContact, id };
+    const contact: Contact = { 
+      ...insertContact, 
+      id,
+      isActive: insertContact.isActive ?? true
+    };
     this.contacts.set(id, contact);
     return contact;
   }
@@ -133,7 +141,13 @@ export class MemStorage implements IStorage {
 
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
     const id = randomUUID();
-    const message: Message = { ...insertMessage, id };
+    const message: Message = { 
+      ...insertMessage, 
+      id,
+      scheduledFor: insertMessage.scheduledFor || null,
+      sentAt: insertMessage.sentAt || null,
+      errorMessage: insertMessage.errorMessage || null
+    };
     this.messages.set(id, message);
     return message;
   }
@@ -158,7 +172,15 @@ export class MemStorage implements IStorage {
 
   async createOrUpdateSettings(insertSettings: InsertSettings): Promise<Settings> {
     const id = this.settings?.id || randomUUID();
-    this.settings = { ...insertSettings, id };
+    this.settings = { 
+      ...insertSettings, 
+      id,
+      reminderTime: insertSettings.reminderTime || "08:00",
+      birthdayTime: insertSettings.birthdayTime || "09:00",
+      weekendsEnabled: insertSettings.weekendsEnabled ?? true,
+      retryAttempts: insertSettings.retryAttempts || 2,
+      retryInterval: insertSettings.retryInterval || 5
+    };
     return this.settings;
   }
 }

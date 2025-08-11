@@ -342,8 +342,8 @@ export default function Messages() {
                         {contact?.name || 'Contato não encontrado'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {message.sentAt ? formatTimestamp(message.sentAt) : 
-                         message.scheduledFor ? formatTimestamp(message.scheduledFor) : 
+                        {message.sentAt ? formatTimestamp(message.sentAt.toString()) : 
+                         message.scheduledFor ? formatTimestamp(message.scheduledFor.toString()) : 
                          'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

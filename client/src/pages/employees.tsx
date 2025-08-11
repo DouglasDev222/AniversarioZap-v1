@@ -104,10 +104,10 @@ export default function Employees() {
 
   const filteredEmployees = employees?.filter((employee) => {
     const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPosition = !positionFilter || employee.position.toLowerCase().includes(positionFilter.toLowerCase());
+    const matchesPosition = !positionFilter || positionFilter === "all" || employee.position.toLowerCase().includes(positionFilter.toLowerCase());
     
     let matchesMonth = true;
-    if (monthFilter) {
+    if (monthFilter && monthFilter !== "all") {
       const birthMonth = new Date(employee.birthDate).getMonth() + 1;
       matchesMonth = birthMonth.toString() === monthFilter;
     }
@@ -182,7 +182,7 @@ export default function Employees() {
                   <SelectValue placeholder="Todos os cargos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os cargos</SelectItem>
+                  <SelectItem value="all">Todos os cargos</SelectItem>
                   <SelectItem value="gerente">Gerente</SelectItem>
                   <SelectItem value="analista">Analista</SelectItem>
                   <SelectItem value="desenvolvedor">Desenvolvedor</SelectItem>
@@ -200,7 +200,7 @@ export default function Employees() {
                   <SelectValue placeholder="Todos os meses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os meses</SelectItem>
+                  <SelectItem value="all">Todos os meses</SelectItem>
                   <SelectItem value="1">Janeiro</SelectItem>
                   <SelectItem value="2">Fevereiro</SelectItem>
                   <SelectItem value="3">Março</SelectItem>

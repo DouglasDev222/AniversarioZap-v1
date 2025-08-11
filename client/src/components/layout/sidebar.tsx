@@ -52,8 +52,8 @@ export default function Sidebar() {
           const isActive = location === item.href;
           return (
             <Link key={item.name} href={item.href}>
-              <a
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+              <div
+                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${
                   isActive
                     ? "bg-blue-50 text-blue-600 font-medium"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -61,7 +61,7 @@ export default function Sidebar() {
               >
                 <i className={item.icon}></i>
                 <span>{item.name}</span>
-              </a>
+              </div>
             </Link>
           );
         })}

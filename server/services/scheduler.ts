@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import * as cron from 'node-cron';
 import { storage } from '../storage';
 import { whatsappService } from './whatsapp';
 
@@ -130,7 +130,7 @@ export class SchedulerService {
             content: message,
             status: 'sent',
             scheduledFor: null,
-            sentAt: new Date().toISOString(),
+            sentAt: new Date(),
             errorMessage: null,
           });
         } else {
