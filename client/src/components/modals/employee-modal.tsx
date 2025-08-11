@@ -15,9 +15,17 @@ interface EmployeeModalProps {
 }
 
 export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeModalProps) {
+  // Format date properly for date input
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return "";
+    // Handle timezone offset to prevent date shifting
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     name: employee?.name || "",
-    birthDate: employee?.birthDate || "",
+    birthDate: employee?.birthDate ? formatDateForInput(employee.birthDate) : "",
     position: employee?.position || "",
     email: employee?.email || "",
   });

@@ -57,7 +57,8 @@ export default function Employees() {
   };
 
   const calculateAge = (birthDate: string) => {
-    const birth = new Date(birthDate);
+    // Handle timezone properly to prevent date shifting
+    const birth = new Date(birthDate + 'T00:00:00');
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
@@ -70,7 +71,8 @@ export default function Employees() {
   };
 
   const getNextBirthday = (birthDate: string) => {
-    const birth = new Date(birthDate);
+    // Handle timezone properly to prevent date shifting
+    const birth = new Date(birthDate + 'T00:00:00');
     const today = new Date();
     const thisYear = today.getFullYear();
     
@@ -108,7 +110,7 @@ export default function Employees() {
     
     let matchesMonth = true;
     if (monthFilter && monthFilter !== "all") {
-      const birthMonth = new Date(employee.birthDate).getMonth() + 1;
+      const birthMonth = new Date(employee.birthDate + 'T00:00:00').getMonth() + 1;
       matchesMonth = birthMonth.toString() === monthFilter;
     }
     
