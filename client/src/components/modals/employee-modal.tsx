@@ -106,7 +106,7 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] mx-4 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[425px] mx-auto my-8 max-h-[85vh] overflow-y-auto sm:mx-4">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Editar Colaborador" : "Adicionar Novo Colaborador"}

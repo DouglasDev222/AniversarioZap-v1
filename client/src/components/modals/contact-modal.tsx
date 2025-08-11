@@ -107,7 +107,7 @@ export default function ContactModal({ isOpen, onClose, contact }: ContactModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-[95vw] max-w-[425px] mx-auto my-8 max-h-[85vh] overflow-y-auto sm:mx-4">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Editar Contato" : "Adicionar Novo Contato"}
