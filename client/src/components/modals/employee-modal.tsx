@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,11 +24,30 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
   };
 
   const [formData, setFormData] = useState({
-    name: employee?.name || "",
-    birthDate: employee?.birthDate ? formatDateForInput(employee.birthDate) : "",
-    position: employee?.position || "",
-    email: employee?.email || "",
+    name: "",
+    birthDate: "",
+    position: "",
+    email: "",
   });
+
+  // Update form data when employee prop changes
+  useEffect(() => {
+    if (employee) {
+      setFormData({
+        name: employee.name || "",
+        birthDate: employee.birthDate ? formatDateForInput(employee.birthDate) : "",
+        position: employee.position || "",
+        email: employee.email || "",
+      });
+    } else {
+      setFormData({
+        name: "",
+        birthDate: "",
+        position: "",
+        email: "",
+      });
+    }
+  }, [employee]);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -52,7 +71,7 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
           : "Colaborador cadastrado com sucesso!",
       });
       onClose();
-      setFormData({ name: "", birthDate: "", position: "", email: "" });
+      // Form will be reset by useEffect when employee prop changes
     },
     onError: () => {
       toast({
