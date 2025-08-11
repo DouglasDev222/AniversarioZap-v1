@@ -152,12 +152,13 @@ export default function Employees() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Search and Filters */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
+        <CardContent className="p-4 lg:p-6">
+          <div className="space-y-4">
+            {/* Search bar */}
+            <div>
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
                 Buscar colaborador
               </label>
@@ -175,155 +176,240 @@ export default function Employees() {
               </div>
             </div>
             
-            <div className="md:w-48">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtrar por cargo
-              </label>
-              <Select value={positionFilter} onValueChange={setPositionFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos os cargos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os cargos</SelectItem>
-                  <SelectItem value="gerente">Gerente</SelectItem>
-                  <SelectItem value="analista">Analista</SelectItem>
-                  <SelectItem value="desenvolvedor">Desenvolvedor</SelectItem>
-                  <SelectItem value="assistente">Assistente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="md:w-48">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mês de aniversário
-              </label>
-              <Select value={monthFilter} onValueChange={setMonthFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos os meses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os meses</SelectItem>
-                  <SelectItem value="1">Janeiro</SelectItem>
-                  <SelectItem value="2">Fevereiro</SelectItem>
-                  <SelectItem value="3">Março</SelectItem>
-                  <SelectItem value="4">Abril</SelectItem>
-                  <SelectItem value="5">Maio</SelectItem>
-                  <SelectItem value="6">Junho</SelectItem>
-                  <SelectItem value="7">Julho</SelectItem>
-                  <SelectItem value="8">Agosto</SelectItem>
-                  <SelectItem value="9">Setembro</SelectItem>
-                  <SelectItem value="10">Outubro</SelectItem>
-                  <SelectItem value="11">Novembro</SelectItem>
-                  <SelectItem value="12">Dezembro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="md:w-auto flex items-end">
-              <Button onClick={handleAdd} className="w-full md:w-auto">
-                <i className="fas fa-plus mr-2"></i>
-                Adicionar
-              </Button>
+            {/* Filters row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filtrar por cargo
+                </label>
+                <Select value={positionFilter} onValueChange={setPositionFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os cargos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os cargos</SelectItem>
+                    <SelectItem value="gerente">Gerente</SelectItem>
+                    <SelectItem value="analista">Analista</SelectItem>
+                    <SelectItem value="desenvolvedor">Desenvolvedor</SelectItem>
+                    <SelectItem value="assistente">Assistente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mês de aniversário
+                </label>
+                <Select value={monthFilter} onValueChange={setMonthFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os meses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os meses</SelectItem>
+                    <SelectItem value="1">Janeiro</SelectItem>
+                    <SelectItem value="2">Fevereiro</SelectItem>
+                    <SelectItem value="3">Março</SelectItem>
+                    <SelectItem value="4">Abril</SelectItem>
+                    <SelectItem value="5">Maio</SelectItem>
+                    <SelectItem value="6">Junho</SelectItem>
+                    <SelectItem value="7">Julho</SelectItem>
+                    <SelectItem value="8">Agosto</SelectItem>
+                    <SelectItem value="9">Setembro</SelectItem>
+                    <SelectItem value="10">Outubro</SelectItem>
+                    <SelectItem value="11">Novembro</SelectItem>
+                    <SelectItem value="12">Dezembro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="sm:col-span-2 lg:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  &nbsp;
+                </label>
+                <Button onClick={handleAdd} className="w-full">
+                  <i className="fas fa-plus mr-2"></i>
+                  Adicionar Colaborador
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Employees Table */}
+      {/* Employees List */}
       <Card>
-        <CardHeader>
-          <CardTitle>Lista de Colaboradores</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg lg:text-xl">Lista de Colaboradores</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Colaborador
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cargo
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data de Nascimento
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Idade
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Próximo Aniversário
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredEmployees?.map((employee) => {
-                  const nextBirthday = getNextBirthday(employee.birthDate);
-                  
-                  return (
-                    <tr key={employee.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium text-blue-600">
-                              {getInitials(employee.name)}
+        <CardContent className="p-0">
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Colaborador
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Cargo
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Data de Nascimento
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Idade
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Próximo Aniversário
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ações
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredEmployees?.map((employee) => {
+                    const nextBirthday = getNextBirthday(employee.birthDate);
+                    
+                    return (
+                      <tr key={employee.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-medium text-blue-600">
+                                {getInitials(employee.name)}
+                              </span>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{employee.name}</div>
+                              {employee.email && (
+                                <div className="text-sm text-gray-500">{employee.email}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {employee.position}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {new Date(employee.birthDate + 'T00:00:00').toLocaleDateString('pt-BR')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {calculateAge(employee.birthDate)} anos
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-900">{nextBirthday.date}</span>
+                          <span className={`text-xs ml-2 ${getDaysColor(nextBirthday.days)}`}>
+                            {getDaysText(nextBirthday.days)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleEdit(employee)}
+                            className="text-indigo-600 hover:text-indigo-900 mr-3"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(employee)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <i className="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden">
+            <div className="divide-y divide-gray-200">
+              {filteredEmployees?.map((employee) => {
+                const nextBirthday = getNextBirthday(employee.birthDate);
+                
+                return (
+                  <div key={employee.id} className="p-4 hover:bg-gray-50">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-medium text-blue-600">
+                          {getInitials(employee.name)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h3 className="text-sm font-medium text-gray-900 truncate">
+                              {employee.name}
+                            </h3>
+                            {employee.email && (
+                              <p className="text-sm text-gray-500 truncate">{employee.email}</p>
+                            )}
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                              {employee.position}
                             </span>
                           </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{employee.name}</div>
-                            {employee.email && (
-                              <div className="text-sm text-gray-500">{employee.email}</div>
-                            )}
+                          
+                          <div className="flex space-x-2 ml-2">
+                            <button
+                              onClick={() => handleEdit(employee)}
+                              className="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg"
+                            >
+                              <i className="fas fa-edit text-sm"></i>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(employee)}
+                              className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg"
+                            >
+                              <i className="fas fa-trash text-sm"></i>
+                            </button>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {employee.position}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(employee.birthDate).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {calculateAge(employee.birthDate)} anos
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-900">{nextBirthday.date}</span>
-                        <span className={`text-xs ml-2 ${getDaysColor(nextBirthday.days)}`}>
-                          {getDaysText(nextBirthday.days)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleEdit(employee)}
-                          className="text-indigo-600 hover:text-indigo-900 mr-3"
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(employee)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            
-            {filteredEmployees?.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <i className="fas fa-users text-4xl mb-2"></i>
-                <p>Nenhum colaborador encontrado</p>
-              </div>
-            )}
+                        
+                        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="text-gray-500">Nascimento:</span>
+                            <p className="text-gray-900 font-medium">
+                              {new Date(employee.birthDate + 'T00:00:00').toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Idade:</span>
+                            <p className="text-gray-900 font-medium">{calculateAge(employee.birthDate)} anos</p>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-gray-500">Próximo aniversário:</span>
+                            <p className="text-gray-900 font-medium">
+                              {nextBirthday.date}
+                              <span className={`ml-2 ${getDaysColor(nextBirthday.days)}`}>
+                                {getDaysText(nextBirthday.days)}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+          
+          {/* Empty State */}
+          {filteredEmployees?.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              <i className="fas fa-users text-4xl mb-4 text-gray-300"></i>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum colaborador encontrado</h3>
+              <p className="text-sm">Tente ajustar os filtros ou adicione novos colaboradores.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

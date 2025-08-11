@@ -33,11 +33,20 @@ const navigation = [
   },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const [location] = useLocation();
 
   return (
-    <aside className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+    <aside className={`
+      w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col
+      fixed lg:static inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out
+      lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+    `}>
       {/* Brand Header */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
@@ -58,6 +67,7 @@ export default function Sidebar() {
           return (
             <Link key={item.name} href={item.href}>
               <div
+                onClick={() => onClose?.()}
                 className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${
                   isActive
                     ? "bg-blue-50 text-blue-600 font-medium"

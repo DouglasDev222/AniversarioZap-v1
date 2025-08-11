@@ -87,7 +87,7 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] mx-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Editar Colaborador" : "Adicionar Novo Colaborador"}
@@ -103,6 +103,7 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
               value={formData.name}
               onChange={handleChange}
               placeholder="Ex: Maria Silva"
+              className="h-11"
               required
             />
           </div>
@@ -115,6 +116,7 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
               type="date"
               value={formData.birthDate}
               onChange={handleChange}
+              className="h-11"
               required
             />
           </div>
@@ -127,6 +129,7 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
               value={formData.position}
               onChange={handleChange}
               placeholder="Ex: Analista de Marketing"
+              className="h-11"
               required
             />
           </div>
@@ -140,13 +143,14 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
               value={formData.email}
               onChange={handleChange}
               placeholder="email@empresa.com"
+              className="h-11"
             />
           </div>
           
-          <div className="flex space-x-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button 
               type="submit" 
-              className="flex-1"
+              className="flex-1 h-11 order-1"
               disabled={mutation.isPending}
             >
               {mutation.isPending ? (
@@ -157,14 +161,14 @@ export default function EmployeeModal({ isOpen, onClose, employee }: EmployeeMod
               ) : (
                 <>
                   <i className="fas fa-save mr-2"></i>
-                  Salvar
+                  {isEditing ? "Atualizar" : "Adicionar"}
                 </>
               )}
             </Button>
             <Button 
               type="button" 
               variant="outline" 
-              className="flex-1"
+              className="flex-1 h-11 order-2 sm:order-1"
               onClick={onClose}
             >
               <i className="fas fa-times mr-2"></i>
