@@ -3,13 +3,13 @@ run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 packages = ["glib", "nss", "nspr", "atk", "at-spi2-atk", "libdrm", "gtk3", "alsa-lib", "libxkbcommon", "pango", "cairo", "gdk-pixbuf", "mesa"]
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
+build = ["npm", "run", "build"]
 
 [[ports]]
 localPort = 5000

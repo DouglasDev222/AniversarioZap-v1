@@ -4,13 +4,13 @@ export class WhatsAppService {
   private browser: Browser | null = null;
   private page: Page | null = null;
   private isConnected = false;
-  private simulateMode = false; // Desabilitado para permitir conexão real
+  private simulateMode = true; // Habilitado por padrão no ambiente Replit
   private qrCode: string | null = null;
   private connectionStatus: 'disconnected' | 'waiting_qr' | 'connecting' | 'connected' = 'disconnected';
 
   async initialize(): Promise<void> {
     if (this.simulateMode) {
-      console.log('WhatsApp Service initialized in simulation mode');
+      console.log('✅ WhatsApp Service initialized in simulation mode (recommended for Replit)');
       this.isConnected = true;
       this.connectionStatus = 'connected';
       return;

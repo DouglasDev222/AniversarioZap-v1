@@ -13,8 +13,8 @@ import {
   settings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -197,8 +197,21 @@ export class DatabaseStorage implements IStorage {
   private db;
 
   constructor() {
-    const sql = neon(process.env.DATABASE_URL!);
-    this.db = drizzle(sql);
+    const databaseUrl = process.env.DATABASE_URL!;
+    
+    // Create a connection pool using pg library for better Supabase compatibility
+    const pool = new Pool({
+      connectionString: databaseUrl,
+      ssl: {
+        rejectUnauthorized: false
+      },
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    });
+    
+    this.db = drizzle(pool);
+    console.log('Database connection pool created for Supabase');
   }
 
   // Employee operations
@@ -225,7 +238,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteEmployee(id: string): Promise<boolean> {
     const result = await this.db.delete(employees).where(eq(employees.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Contact operations
@@ -252,7 +265,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteContact(id: string): Promise<boolean> {
     const result = await this.db.delete(contacts).where(eq(contacts.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Message operations
@@ -285,7 +298,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMessage(id: string): Promise<boolean> {
     const result = await this.db.delete(messages).where(eq(messages.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Settings operations
@@ -327,19 +340,77 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Initialize storage with fallback
+// Initialize storage with Supabase, with retry mechanism
 async function initializeStorage(): Promise<IStorage> {
-  try {
-    const dbStorage = new DatabaseStorage();
-    // Test the connection
-    await dbStorage.getSettings();
-    console.log('✅ Conectado ao PostgreSQL (Supabase)');
-    return dbStorage;
-  } catch (error: any) {
-    console.log('⚠️ Falha na conexão PostgreSQL, usando armazenamento em memória');
-    console.log('Erro:', error.message || error);
-    return new MemStorage();
+  if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL não encontrada nas variáveis de ambiente');
+    console.error('Por favor, configure a DATABASE_URL do Supabase');
+    throw new Error('DATABASE_URL environment variable is required for Supabase connection');
   }
+  
+  console.log('🔗 Conectando ao Supabase...');
+  console.log('Database URL exists:', !!process.env.DATABASE_URL);
+  console.log('Database URL format check:', process.env.DATABASE_URL?.startsWith('postgresql://') ? 'Valid PostgreSQL URL' : 'Invalid URL format');
+  
+  // Show partial URL for debugging (hide sensitive parts)
+  const urlParts = process.env.DATABASE_URL.split('@');
+  if (urlParts.length > 1) {
+    const hostPart = urlParts[urlParts.length - 1].split('/')[0];
+    console.log('Connecting to host:', hostPart);
+  } else {
+    console.log('URL parsing issue - no @ found in expected position');
+  }
+  
+  const dbStorage = new DatabaseStorage();
+  
+  // Retry mechanism
+  const maxRetries = 3;
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Tentativa ${attempt}/${maxRetries} de conexão...`);
+      
+      // Test the connection with a timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Connection timeout')), 10000);
+      });
+      
+      const connectionPromise = dbStorage.getSettings();
+      await Promise.race([connectionPromise, timeoutPromise]);
+      
+      console.log('✅ Conectado ao Supabase com sucesso!');
+      return dbStorage;
+    } catch (error: any) {
+      lastError = error;
+      console.error(`❌ Tentativa ${attempt} falhou:`, error.message);
+      
+      if (attempt < maxRetries) {
+        console.log(`Aguardando 2s antes da próxima tentativa...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+  }
+  
+  // If all retries failed, provide detailed error information
+  console.error('❌ Todas as tentativas de conexão falharam');
+  console.error('Último erro:', lastError.message);
+  
+  if (lastError.message.includes('fetch failed') || lastError.message.includes('ENOTFOUND')) {
+    console.error('');
+    console.error('🔍 Possíveis causas:');
+    console.error('1. URL do Supabase incorreta ou mal formatada');
+    console.error('2. Projeto Supabase pausado ou inacessível');
+    console.error('3. Senha incorreta na URL de conexão');
+    console.error('4. Problemas de conectividade de rede');
+    console.error('');
+    console.error('📋 Verifique:');
+    console.error('- Se substituiu [YOUR-PASSWORD] pela senha real');
+    console.error('- Se o projeto está ativo no dashboard do Supabase');
+    console.error('- Se copiou a URL correta (Transaction pooler)');
+  }
+  
+  throw new Error(`Falha na conexão com Supabase após ${maxRetries} tentativas: ${lastError.message}`);
 }
 
 // Initialize storage asynchronously
