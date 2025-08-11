@@ -1,12 +1,22 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
+// Use dynamic import for whatsapp-web.js CommonJS module
+let wwebjs: any;
+let qrcode: any;
+
+async function initializeModules() {
+  if (!wwebjs) {
+    wwebjs = await import('whatsapp-web.js');
+    qrcode = await import('qrcode-terminal');
+  }
+  return { Client: wwebjs.Client, LocalAuth: wwebjs.LocalAuth, qrcode };
+}
 
 export class WhatsAppService {
-  private browser: Browser | null = null;
-  private page: Page | null = null;
+  private client: any | null = null;
   private isConnected = false;
   private simulateMode = true; // Habilitado por padrão no ambiente Replit
   private qrCode: string | null = null;
   private connectionStatus: 'disconnected' | 'waiting_qr' | 'connecting' | 'connected' = 'disconnected';
+  private modules: any = null;
 
   async initialize(): Promise<void> {
     if (this.simulateMode) {
@@ -17,74 +27,71 @@ export class WhatsAppService {
     }
 
     this.connectionStatus = 'connecting';
-    console.log('Iniciando conexão com WhatsApp Web...');
+    console.log('🔄 Iniciando conexão com WhatsApp Web usando whatsapp-web.js...');
 
     try {
-      // Use the bundled Chromium from Puppeteer but with additional flags for Replit environment
-      this.browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-web-security',
-          '--disable-features=VizDisplayCompositor',
-          '--disable-blink-features=AutomationControlled',
-          '--disable-background-networking',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-          '--disable-extensions',
-          '--no-first-run',
-          '--no-default-browser-check',
-          '--disable-gpu',
-          '--disable-software-rasterizer',
-          '--single-process', // Important for limited memory environments
-          '--no-zygote'       // Important for containerized environments
-        ]
+      // Load modules dynamically
+      this.modules = await initializeModules();
+      const { Client, LocalAuth } = this.modules;
+
+      // Initialize WhatsApp Web client with local authentication
+      this.client = new Client({
+        authStrategy: new LocalAuth({
+          dataPath: './whatsapp-sessions'
+        }),
+        puppeteer: {
+          headless: true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+            '--single-process',
+            '--no-zygote'
+          ]
+        }
       });
 
-      this.page = await this.browser.newPage();
-      await this.page.setViewport({ width: 1200, height: 800 });
-      await this.page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-      
-      console.log('Navegando para WhatsApp Web...');
-      await this.page.goto('https://web.whatsapp.com', { waitUntil: 'networkidle2' });
-      
-      // Wait for QR code or main interface
-      console.log('Aguardando QR code ou interface principal...');
-      await this.page.waitForSelector('[data-testid="qr-code"], [data-testid="search"], [data-testid="intro-md-beta-logo-dark"], [data-testid="intro-md-beta-logo-light"]', { timeout: 30000 });
-      
-      // Check if already logged in
-      const searchBox = await this.page.$('[data-testid="search"]');
-      if (searchBox) {
+      // Setup event listeners
+      this.client.on('qr', (qr: string) => {
+        console.log('📱 QR Code recebido! Escaneie com seu WhatsApp:');
+        console.log(qr);
+        this.modules.qrcode.generate(qr, { small: true });
+        this.qrCode = qr;
+        this.connectionStatus = 'waiting_qr';
+      });
+
+      this.client.on('ready', () => {
+        console.log('✅ WhatsApp Web conectado com sucesso!');
         this.isConnected = true;
         this.connectionStatus = 'connected';
-        console.log('WhatsApp Web já está conectado!');
-        return;
-      }
+        this.qrCode = null;
+      });
 
-      // Look for QR code
-      this.connectionStatus = 'waiting_qr';
-      console.log('Aguardando scan do QR code...');
-      
-      // Try to capture QR code
-      await this.captureQRCode();
-      
-      // Wait for login completion
-      await this.page.waitForSelector('[data-testid="search"]', { timeout: 120000 });
-      this.isConnected = true;
-      this.connectionStatus = 'connected';
-      this.qrCode = null;
-      console.log('WhatsApp Web conectado com sucesso!');
+      this.client.on('authenticated', () => {
+        console.log('🔐 WhatsApp autenticado com sucesso!');
+      });
+
+      this.client.on('auth_failure', (msg: string) => {
+        console.error('❌ Falha na autenticação WhatsApp:', msg);
+        this.connectionStatus = 'disconnected';
+        this.isConnected = false;
+      });
+
+      this.client.on('disconnected', (reason: string) => {
+        console.log('⚠️ WhatsApp desconectado:', reason);
+        this.connectionStatus = 'disconnected';
+        this.isConnected = false;
+        this.qrCode = null;
+      });
+
+      // Initialize the client
+      await this.client.initialize();
       
     } catch (error) {
-      console.error('Falha ao inicializar WhatsApp:', error);
-      console.log('ATENÇÃO: Para usar o WhatsApp real, você precisa:');
-      console.log('1. Rodar o projeto em um ambiente local (não no Replit)');
-      console.log('2. Instalar dependências do sistema: apt-get install -y libgbm1 libnss3 libxss1 libgtk-3-0 libasound2');
-      console.log('3. Ou usar Docker com uma imagem que suporte Puppeteer');
-      console.log('Retornando ao modo simulação devido a limitações do ambiente Replit');
+      console.error('❌ Falha ao inicializar WhatsApp:', error);
+      console.log('🔄 Retornando ao modo simulação devido a erro de inicialização');
       this.connectionStatus = 'disconnected';
       this.simulateMode = true;
       this.isConnected = true;
@@ -104,34 +111,32 @@ export class WhatsAppService {
       return true;
     }
 
-    if (!this.page) {
-      throw new Error('WhatsApp page is not initialized');
+    if (!this.client) {
+      throw new Error('WhatsApp client is not initialized');
     }
 
     try {
-      // Format phone number (remove non-digits and add country code if needed)
-      const formattedNumber = phoneNumber.replace(/\D/g, '');
-      const url = `https://web.whatsapp.com/send?phone=${formattedNumber}&text=${encodeURIComponent(message)}`;
+      // Format phone number for WhatsApp (remove special characters and ensure country code)
+      let formattedNumber = phoneNumber.replace(/\D/g, '');
       
-      await this.page.goto(url);
-      
-      // Wait for chat to load
-      await this.page.waitForSelector('[data-testid="conversation-compose-box-input"]', { timeout: 30000 });
-      
-      // Wait a bit for the message to load in the input
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Click send button
-      const sendButton = await this.page.$('[data-testid="send"]');
-      if (sendButton) {
-        await sendButton.click();
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return true;
-      } else {
-        throw new Error('Send button not found');
+      // Add Brazil country code if not present
+      if (!formattedNumber.startsWith('55') && formattedNumber.length === 11) {
+        formattedNumber = '55' + formattedNumber;
       }
+      
+      // WhatsApp format: number@c.us
+      const chatId = formattedNumber + '@c.us';
+      
+      console.log(`📤 Enviando mensagem para ${phoneNumber} (${chatId})`);
+      
+      // Send message using whatsapp-web.js
+      await this.client.sendMessage(chatId, message);
+      
+      console.log('✅ Mensagem enviada com sucesso!');
+      return true;
+      
     } catch (error) {
-      console.error(`Failed to send message to ${phoneNumber}:`, error);
+      console.error(`❌ Falha ao enviar mensagem para ${phoneNumber}:`, error);
       return false;
     }
   }
@@ -142,45 +147,31 @@ export class WhatsAppService {
       return this.isConnected;
     }
 
-    if (!this.page) return false;
+    if (!this.client) return false;
     
     try {
-      await this.page.reload();
-      await this.page.waitForSelector('[data-testid="search"]', { timeout: 10000 });
-      this.isConnected = true;
-      return true;
+      const state = await this.client.getState();
+      console.log('📊 Estado do WhatsApp:', state);
+      this.isConnected = state === 'CONNECTED';
+      return this.isConnected;
     } catch (error) {
+      console.error('❌ Erro ao testar conexão:', error);
       this.isConnected = false;
       return false;
     }
   }
 
   async close(): Promise<void> {
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-      this.page = null;
-      this.isConnected = false;
-    }
-  }
-
-  async captureQRCode(): Promise<void> {
-    if (!this.page) return;
-
-    try {
-      // Wait for QR code to appear
-      await this.page.waitForSelector('[data-testid="qr-code"]', { timeout: 10000 });
-      
-      // Get QR code element
-      const qrElement = await this.page.$('[data-testid="qr-code"] canvas');
-      if (qrElement) {
-        // Take screenshot of QR code
-        const qrBuffer = await qrElement.screenshot({ encoding: 'base64' });
-        this.qrCode = `data:image/png;base64,${qrBuffer}`;
-        console.log('QR Code capturado com sucesso');
+    if (this.client) {
+      try {
+        await this.client.destroy();
+        console.log('🔌 WhatsApp client desconectado');
+      } catch (error) {
+        console.error('Erro ao fechar cliente WhatsApp:', error);
       }
-    } catch (error) {
-      console.log('Não foi possível capturar o QR code:', error);
+      this.client = null;
+      this.isConnected = false;
+      this.connectionStatus = 'disconnected';
     }
   }
 
@@ -199,13 +190,17 @@ export class WhatsAppService {
   }
 
   async refreshQRCode(): Promise<string | null> {
-    if (!this.page || this.connectionStatus !== 'waiting_qr') return null;
+    if (this.connectionStatus !== 'waiting_qr' || this.simulateMode) {
+      return this.qrCode;
+    }
     
     try {
-      await this.captureQRCode();
+      // For whatsapp-web.js, QR code refresh is handled automatically
+      // We just return the current QR code
+      console.log('🔄 QR Code atual disponível');
       return this.qrCode;
     } catch (error) {
-      console.error('Erro ao atualizar QR code:', error);
+      console.error('❌ Erro ao atualizar QR code:', error);
       return null;
     }
   }
@@ -216,23 +211,19 @@ export class WhatsAppService {
     this.connectionStatus = 'connected';
     this.qrCode = null;
     
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-      this.page = null;
+    if (this.client) {
+      await this.close();
     }
     
-    console.log('Modo simulação ativado');
+    console.log('✅ Modo simulação ativado');
   }
 
   async enableRealMode(): Promise<void> {
-    console.log('Desabilitando modo simulação - iniciando conexão real com WhatsApp Web');
+    console.log('🔄 Desabilitando modo simulação - preparando conexão real com WhatsApp Web');
     
-    // Close any existing browser connection
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-      this.page = null;
+    // Close any existing client connection
+    if (this.client) {
+      await this.close();
     }
     
     this.simulateMode = false;
@@ -240,7 +231,7 @@ export class WhatsAppService {
     this.connectionStatus = 'disconnected';
     this.qrCode = null;
     
-    console.log('Modo real ativado - use o endpoint /api/whatsapp/connect para conectar');
+    console.log('📱 Modo real ativado - use o endpoint /api/whatsapp/connect para conectar');
   }
 }
 
