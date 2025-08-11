@@ -157,7 +157,7 @@ export default function Messages() {
   };
 
   const filteredMessages = messages?.filter((message) => {
-    return !statusFilter || message.status === statusFilter;
+    return !statusFilter || statusFilter === "all" || message.status === statusFilter;
   });
 
   const messageStats = {
@@ -273,7 +273,7 @@ export default function Messages() {
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os status</SelectItem>
+                  <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="sent">Enviadas</SelectItem>
                   <SelectItem value="scheduled">Agendadas</SelectItem>
                   <SelectItem value="failed">Falharam</SelectItem>
